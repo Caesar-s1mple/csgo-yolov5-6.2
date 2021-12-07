@@ -1,2 +1,6 @@
 #models
 *.pt
+
+#others
+__pycache__
+*.pyc
