@@ -1,5 +1,9 @@
 #models
 *.pt
+*.pth
+*.onnx
+*.engine
+*.trt
 
 #others
 __pycache__
