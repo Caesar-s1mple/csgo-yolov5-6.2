@@ -17,6 +17,7 @@ import pynput
 from aim_csgo.aim_lock_pi import Locker, recoil_control
 from aim_csgo.verify_args import verify_args
 from threading import Thread
+import winsound
 import warnings
 import argparse
 import time
@@ -47,6 +48,7 @@ parser.add_argument('--hold-lock', type=bool, default=False, help='lock模式；
 parser.add_argument('--lock-sen', type=float, default=1, help='lock幅度系数；为游戏中(csgo)灵敏度')
 parser.add_argument('--lock-smooth', type=float, default=1, help='lock平滑系数；越大越平滑，最低1.0')
 parser.add_argument('--lock-button', type=str, default='x2', help='lock按键；只支持鼠标按键')
+parser.add_argument('--lock-sound', type=bool, default=True, help='切换到lock模式时是否发出提示音')
 parser.add_argument('--lock-strategy', type=str, default='', help='lock模式移动改善策略，为空时无策略，为pid时使用PID控制算法，暂未实现其他算法捏')
 parser.add_argument('--p-i-d', type=tuple, default=(1.1, 0.1, 0.1), help='PID控制算法p,i,d参数调整')
 parser.add_argument('--head-first', type=bool, default=True, help='是否优先瞄头')
@@ -122,14 +124,17 @@ def on_click(x, y, button, pressed):
         if args.hold_lock:
             if pressed:
                 lock_mode = True
-                print('locking...')
+                if args.lock_sound:
+                    winsound.Beep(1000, 300)
             else:
                 lock_mode = False
-                print('lock mode off')
+                if args.lock_sound:
+                    winsound.Beep(500, 300)
         else:
             if pressed:
                 lock_mode = not lock_mode
-                print('lock mode', 'on' if lock_mode else 'off')
+                if args.lock_sound:
+                    winsound.Beep(1000 if lock_mode else 500, 300)
                 if not lock_mode:
                     locker.reset_params()
 
