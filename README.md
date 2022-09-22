@@ -15,11 +15,16 @@
 ## 联系方式
 
 - QQ群1：951024954
+
 - QQ群2：967082372（推荐加入）
 
+- B站ID：[Caesar丶L](https://space.bilibili.com/14796576)
 
+- GitHub：[Caesar-s1mple](https://github.com/Caesar-s1mple)
 
-#### 最后
+  
 
-**不要拿着我的程序圈钱**
+### 最后！
+
+**不要拿着我的代码套层皮就圈钱，我都没拿这个赚钱你凭什么(╯‵□′)╯︵┻━┻**
 
