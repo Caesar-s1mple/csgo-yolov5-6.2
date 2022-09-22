@@ -14,9 +14,9 @@
 
 ## 联系方式
 
-- QQ群1：951024954
+- QQ群1：[951024954](https://qm.qq.com/cgi-bin/qm/qr?k=dqypucNxsZ1jis_vsrh2aU3lg2WqDWE1&jump_from=webapi&authKey=a1IQ5sa7W6lYfKdxhRKFD7lAG9EGDprrfgOboJgg1ewDPtVEE2yAg5AG/OSb52GK)
 
-- QQ群2：967082372（推荐加入）
+- QQ群2：[967082372](https://qm.qq.com/cgi-bin/qm/qr?k=VwAu35sm2MtIquEWB7ajkE_6fu5vtMTh&jump_from=webapi&authKey=jXIi1Vctpiaxmok4Yn2TAoQu8zW74rDykw9tgkJ7o2PMtXS4EU+utXgypbSggAOp)（推荐加入）
 
 - B站ID：[Caesar丶L](https://space.bilibili.com/14796576)
 
