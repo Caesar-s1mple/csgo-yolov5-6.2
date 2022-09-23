@@ -1,5 +1,5 @@
 # THIS FILE IS PART OF Caesar PROJECT
-# main_nonblock.py - The core part of the AI assistant
+# main.py - The core part of the AI assistant
 #
 # THIS PROGRAM IS A FREE PROGRAM, WHICH IS LICENSED UNDER Caesar
 # DO NOT FORWARD THIS PROGRAM TO ANYONE
