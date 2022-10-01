@@ -1,3 +1,8 @@
+#files
+*.rar
+*.zip
+test.py
+
 #models
 *.pt
 *.pth
@@ -8,3 +13,4 @@
 #others
 __pycache__
 *.pyc
+.idea

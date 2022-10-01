@@ -1,5 +1,5 @@
 # THIS FILE IS PART OF Caesar PROJECT
-# main_nonblock.py - The core part of the AI assistant
+# main.py - The core part of the AI assistant
 #
 # THIS PROGRAM IS A FREE PROGRAM, WHICH IS LICENSED UNDER Caesar
 # DO NOT FORWARD THIS PROGRAM TO ANYONE
@@ -14,9 +14,8 @@ import numpy as np
 from utils.general import non_max_suppression, scale_coords, xyxy2xywh
 from utils.augmentations import letterbox
 import pynput
-from aim_csgo.aim_lock_pi import Locker, recoil_control
+from aim_csgo.aim_lock_pi import Locker
 from aim_csgo.verify_args import verify_args
-from threading import Thread
 import winsound
 import warnings
 import argparse
@@ -25,8 +24,10 @@ import os
 
 "参数请认真修改，改好了效果就好"
 "游戏与桌面分辨率不一致时需要开启全屏模式，不能是无边框窗口"
-"鼠标移动在fov为90的游戏中下最准确 其他fov能用，但可能效果没那么好"
 "此版本不支持在桌面试用，因为默认鼠标在屏幕中心"
+"默认参数在csgo中1280*960(4:3)分辨率下为一帧锁"
+"说真的。检测帧率在13左右就够了，太快了有可能适得其反哦，最好自己调整sleep-time使得帧率在13左右"
+"你可以尝试同时开启lock_mode和recoil_mode，然后试着在靶场按住左键不松手^^（只支持ak47）"
 parser = argparse.ArgumentParser()
 parser.add_argument('--model-path', type=str, default='aim_csgo/models/1200.pt', help='模型地址，pytorch模型请以.pt结尾，onnx模型请以.onnx结尾，tensorrt模型请以.trt结尾')
 parser.add_argument('--imgsz', type=list, default=640, help='和你训练模型时imgsz一样')
@@ -34,10 +35,11 @@ parser.add_argument('--conf-thres', type=float, default=0.6, help='置信阈值'
 parser.add_argument('--iou-thres', type=float, default=0.05, help='交并比阈值')
 parser.add_argument('--use-cuda', type=bool, default=True, help='是否使用cuda')
 parser.add_argument('--half', type=bool, default=True, help='是否使用半浮点运算')
+parser.add_argument('--sleep-time', type=int, default=5, help='检测帧率控制(ms)，防止因快速拉枪导致的残影误检')
 
 parser.add_argument('--show-window', type=bool, default=True, help='是否显示实时检测窗口(若为True，若想关闭窗口请结束程序！)')
 parser.add_argument('--top-most', type=bool, default=True, help='是否保持实时检测窗口置顶')
-parser.add_argument('--resize-window', type=float, default=1/3, help='缩放实时检测窗口大小')
+parser.add_argument('--resize-window', type=float, default=1 / 3, help='缩放实时检测窗口大小')
 parser.add_argument('--thickness', type=int, default=3, help='画框粗细，必须大于1/resize-window')
 parser.add_argument('--show-fps', type=bool, default=True, help='是否显示帧率')
 parser.add_argument('--show-label', type=bool, default=True, help='是否显示标签')
@@ -47,7 +49,7 @@ parser.add_argument('--region', type=tuple, default=(1, 1), help='检测范围�
 parser.add_argument('--hold-lock', type=bool, default=False, help='lock模式；True为按住，False为切换')
 parser.add_argument('--lock-sen', type=float, default=1, help='lock幅度系数；为游戏中(csgo)灵敏度')
 parser.add_argument('--lock-smooth', type=float, default=1, help='lock平滑系数；越大越平滑，最低1.0')
-parser.add_argument('--lock-button', type=str, default='x2', help='lock按键；只支持鼠标按键')
+parser.add_argument('--lock-button', type=str, default='x2', help='lock按键；只支持鼠标按键，不能是左键')
 parser.add_argument('--lock-sound', type=bool, default=True, help='切换到lock模式时是否发出提示音')
 parser.add_argument('--lock-strategy', type=str, default='', help='lock模式移动改善策略，为空时无策略，为pid时使用PID控制算法，暂未实现其他算法捏')
 parser.add_argument('--p-i-d', type=tuple, default=(1.1, 0.1, 0.1), help='PID控制算法p,i,d参数调整')
@@ -55,24 +57,8 @@ parser.add_argument('--head-first', type=bool, default=True, help='是否优先�
 parser.add_argument('--lock-tag', type=list, default=[1, 0, 3, 2], help='对应标签；缺一不可，自己按以下顺序对应标签，ct_head ct_body t_head t_body')
 parser.add_argument('--lock-choice', type=list, default=[1, 3], help='目标选择；可自行决定锁定的目标，从自己的标签中选')
 
-"除了前两行以外其他看个乐，因为懒并没有写通用压枪代码^^"
-parser.add_argument('--recoil-sen', type=float, default=3, help='压枪幅度；自己调，调到合适')
-parser.add_argument('--recoil-button-ak47', type=str, default='x1', help='ak47压枪按键；压枪时不会lock，只支持鼠标按键,用不到置为0')
-parser.add_argument('--recoil-button-m4a1', type=str, default='0', help='m4a1压枪按键；同上')
-parser.add_argument('--recoil-button-m4a4', type=str, default='0', help='m4a4压枪按键；同上')
-parser.add_argument('--recoil-button-galil', type=str, default='0', help='galil压枪按键；同上')
-parser.add_argument('--recoil-button-famas', type=str, default='0', help='famas压枪按键；同上')
-parser.add_argument('--recoil-button-aug', type=str, default='0', help='aug压枪按键；同上')
-parser.add_argument('--recoil-button-bizon', type=str, default='0', help='bizon压枪按键；同上')
-parser.add_argument('--recoil-button-cz75', type=str, default='0', help='cz75枪按键；同上')
-parser.add_argument('--recoil-button-m249', type=str, default='0', help='m249压枪按键；同上')
-parser.add_argument('--recoil-button-mac10', type=str, default='0', help='mac10压枪按键；同上')
-parser.add_argument('--recoil-button-mp5', type=str, default='0', help='mp5压枪按键；同上')
-parser.add_argument('--recoil-button-mp7', type=str, default='0', help='mp7压枪按键；同上')
-parser.add_argument('--recoil-button-mp9', type=str, default='0', help='mp9压枪按键；同上')
-parser.add_argument('--recoil-button-p90', type=str, default='0', help='p90压枪按键；同上')
-parser.add_argument('--recoil-button-sg553', type=str, default='0', help='sg553压枪按键；同上')
-parser.add_argument('--recoil-button-ump45', type=str, default='0', help='ump45压枪按键；同上')
+parser.add_argument('--recoil-sen', type=float, default=1, help='压枪幅度；自己调，调到合适')
+parser.add_argument('--recoil-button', type=str, default='x1', help='ak47压枪按键；只支持鼠标按键,用不到置为0')
 
 args = parser.parse_args()
 
@@ -87,7 +73,6 @@ warnings.filterwarnings('ignore')
 
 u32 = windll.user32
 g32 = windll.gdi32
-
 
 cur_dir = os.path.dirname(os.path.abspath(__file__)) + '\\'
 
@@ -104,14 +89,13 @@ iou_thres = args.iou_thres
 screen = Screen(args)
 
 model = load_model(args)
-stride, names, pt = model.stride, model.names, model.pt
+stride = model.stride
 
 lock_mode = False
 lock_button = eval('pynput.mouse.Button.' + args.lock_button)
 locker = Locker(args)
 
-t = Thread(target=recoil_control, kwargs={'args': args})
-t.start()
+recoil_button = eval('pynput.mouse.Button.' + args.recoil_button)
 
 if args.show_window:
     cv2.namedWindow('csgo-detect', 0)
@@ -123,11 +107,11 @@ def on_click(x, y, button, pressed):
     if button == lock_button:
         if args.hold_lock:
             if pressed:
-                lock_mode = True
+                locker.lock_mode = True
                 if args.lock_sound:
                     winsound.Beep(1000, 300)
             else:
-                lock_mode = False
+                locker.lock_mode = False
                 if args.lock_sound:
                     winsound.Beep(500, 300)
         else:
@@ -137,6 +121,19 @@ def on_click(x, y, button, pressed):
                     winsound.Beep(1000 if lock_mode else 500, 300)
                 if not lock_mode:
                     locker.reset_params()
+
+    elif button == recoil_button:
+        if pressed:
+            locker.recoil_mode = not locker.recoil_mode
+            if args.lock_sound:
+                winsound.Beep(1000 if locker.recoil_mode else 500, 300)
+
+    elif button == pynput.mouse.Button.left and locker.recoil_mode:
+        if pressed:
+            locker.left_pressed = True
+            locker.shot_time = time.time()
+        else:
+            locker.left_pressed = False
 
 
 listener = pynput.mouse.Listener(on_click=on_click)
@@ -149,8 +146,13 @@ cnt = 0
 while True:
     if cnt % 20 == 0:
         screen.update_parameters()
+        locker.top_x = screen.top_x
+        locker.top_y = screen.top_y
+        locker.len_x = screen.len_x
+        locker.len_y = screen.len_y
         cnt = 0
 
+    t1 = time.time()
     img0 = screen.grab_screen_win32()
 
     img = letterbox(img0, imgsz, stride=stride)[0]
@@ -163,8 +165,8 @@ while True:
     if len(img.shape) == 3:
         img = img[None]
 
+    t1 = time.time()
     pred = model(img, augment=False, visualize=False)
-
     det = non_max_suppression(pred, conf_thres, iou_thres, agnostic=False)[0]
 
     aims = []
@@ -181,7 +183,7 @@ while True:
 
     if len(aims):
         if lock_mode:
-            locker.lock2(aims, screen.top_x, screen.top_y, screen.len_x, screen.len_y, args)
+            locker.lock(aims)
 
         if args.show_window:
             for i, det in enumerate(aims):
@@ -194,9 +196,13 @@ while True:
                 if args.show_label:
                     cv2.putText(img0, tag, top_left, 0, 0.7, (235, 0, 0), 4)
 
+    if not locker.locked:
+        locker.recoil_only()
+
     if args.show_window:
         if args.show_fps:
-            cv2.putText(img0, "FPS:{:.1f}".format(1. / (time.time() - t0)), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 235), 4)
+            cv2.putText(img0, "FPS:{:.1f}".format(1. / (time.time() - t0)), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 2,
+                        (0, 0, 235), 4)
             t0 = time.time()
         cv2.imshow('csgo-detect', img0)
 
@@ -205,5 +211,5 @@ while True:
             u32.SetWindowPos(hwnd, HWND(-1), 0, 0, 0, 0, 0x0001 | 0x0002)
 
         cv2.waitKey(1)
-
+    time.sleep(args.sleep_time / 1000)
     cnt += 1

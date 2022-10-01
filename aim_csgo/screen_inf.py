@@ -11,39 +11,19 @@ class Screen(object):
         self.region = args.region
         self.top_x, self.top_y = 0, 0
         self.len_x, self.len_y = 0, 0
+        self.bmp = None
+        self.srcdc, self.memdc = self.__get_screenhandle_etc()
         self.update_parameters()
-
-        self.hwnd, self.srcdc, self.memdc, self.bmp = self.__get_screenhandle_etc()
 
     def update_parameters(self):
         x, y = self.get_real_resolution().values()
-        self.hwnd, self.srcdc, self.memdc, self.bmp = self.__get_screenhandle_etc()
         self.len_x, self.len_y = int(x * self.region[0]), int(y * self.region[1])
         self.top_x, self.top_y = int(x // 2 * (1. - self.region[0])), int(y // 2 * (1. - self.region[1]))
+        self.bmp = g32.CreateCompatibleBitmap(self.srcdc, self.len_x, self.len_y)
 
-    @staticmethod
-    def get_scaling():  # 随便写的，获取缩放大小的，没用到
-        real_resolution = Screen.get_real_resolution()
-        screen_size = Screen.get_screen_size()
-        proportion = round(real_resolution['wide'] / screen_size['wide'], 2)
-        return proportion
-
-    @staticmethod
-    def get_parameters():
-        x, y = Screen.get_screen_size().values()
-        return 0, 0, x, y
-
-    @staticmethod
-    def get_screen_size():
-        wide = u32.GetSystemMetrics(0)
-        high = u32.GetSystemMetrics(1)
-        return {"wide": wide, "high": high}
-
-    @staticmethod
-    def get_real_resolution():
-        hDC = u32.GetDC(0)
-        wide = g32.GetDeviceCaps(hDC, 118)
-        high = g32.GetDeviceCaps(hDC, 117)
+    def get_real_resolution(self):
+        wide = g32.GetDeviceCaps(self.srcdc, 118)
+        high = g32.GetDeviceCaps(self.srcdc, 117)
         return {"wide": wide, "high": high}
 
     def grab_screen_win32(self):
@@ -53,7 +33,6 @@ class Screen(object):
         total_bytes = self.len_x * self.len_y * 4
         buffer = bytearray(total_bytes)
         byte_array = c_ubyte * total_bytes
-
         g32.GetBitmapBits(self.bmp, total_bytes, byte_array.from_buffer(buffer))
 
         img = np.frombuffer(buffer, dtype=np.uint8).reshape(self.len_y, self.len_x, 4)
@@ -61,16 +40,7 @@ class Screen(object):
         return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
 
     def __get_screenhandle_etc(self):
-        hwnd = u32.GetDesktopWindow()
-        srcdc = u32.GetWindowDC(hwnd)
+        srcdc = u32.GetDC(0)
         memdc = g32.CreateCompatibleDC(srcdc)
-        bmp = g32.CreateCompatibleBitmap(srcdc, self.len_x, self.len_y)
 
-        return hwnd, srcdc, memdc, bmp
-
-    def release_handle(self):
-        g32.DeleteDC(self.bmp)
-        g32.DeleteDC(self.memdc)
-        u32.ReleaseDC(self.hwnd, self.srcdc)
-        # u32.DeleteObject(self.bmp.GetHandle())
-
+        return srcdc, memdc
