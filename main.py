@@ -26,7 +26,7 @@ import os
 "游戏与桌面分辨率不一致时需要开启全屏模式，不能是无边框窗口"
 "此版本不支持在桌面试用，因为默认鼠标在屏幕中心"
 "默认参数在csgo中1280*960(4:3)分辨率下为一帧锁"
-"检测帧率高于15，并且出现明显抖动时，把lock-smooth上调"
+"检测帧率高于15，锁人出现明显抖动时，把lock-smooth上调"
 "你可以尝试同时开启lock_mode和recoil_mode，然后试着在靶场按住左键不松手^^（只支持ak47）"
 parser = argparse.ArgumentParser()
 parser.add_argument('--model-path', type=str, default='aim_csgo/models/1200.pt', help='模型地址，pytorch模型请以.pt结尾，onnx模型请以.onnx结尾，tensorrt模型请以.trt结尾')
