@@ -26,7 +26,7 @@ import os
 "游戏与桌面分辨率不一致时需要开启全屏模式，不能是无边框窗口"
 "此版本不支持在桌面试用，因为默认鼠标在屏幕中心"
 "默认参数在csgo中1280*960(4:3)分辨率下为一帧锁"
-"说真的。检测帧率在13左右就够了，太快了有可能适得其反哦，最好自己调整sleep-time使得帧率在13左右"
+"检测帧率高于15，并且出现明显抖动时，把lock-smooth上调"
 "你可以尝试同时开启lock_mode和recoil_mode，然后试着在靶场按住左键不松手^^（只支持ak47）"
 parser = argparse.ArgumentParser()
 parser.add_argument('--model-path', type=str, default='aim_csgo/models/1200.pt', help='模型地址，pytorch模型请以.pt结尾，onnx模型请以.onnx结尾，tensorrt模型请以.trt结尾')
@@ -91,7 +91,6 @@ screen = Screen(args)
 model = load_model(args)
 stride = model.stride
 
-lock_mode = False
 lock_button = eval('pynput.mouse.Button.' + args.lock_button)
 locker = Locker(args)
 
@@ -103,7 +102,6 @@ if args.show_window:
 
 
 def on_click(x, y, button, pressed):
-    global lock_mode
     if button == lock_button:
         if args.hold_lock:
             if pressed:
@@ -116,10 +114,10 @@ def on_click(x, y, button, pressed):
                     winsound.Beep(500, 300)
         else:
             if pressed:
-                lock_mode = not lock_mode
+                locker.lock_mode = not locker.lock_mode
                 if args.lock_sound:
-                    winsound.Beep(1000 if lock_mode else 500, 300)
-                if not lock_mode:
+                    winsound.Beep(1000 if locker.lock_mode else 500, 300)
+                if not locker.lock_mode:
                     locker.reset_params()
 
     elif button == recoil_button:
@@ -182,7 +180,7 @@ while True:
             aims.append(aim)
 
     if len(aims):
-        if lock_mode:
+        if locker.lock_mode:
             locker.lock(aims)
 
         if args.show_window:
