@@ -15,7 +15,7 @@ class Screen(object):
         self.srcdc, self.memdc = self.__get_screenhandle_etc()
         self.update_parameters()
 
-    def update_parameters(self):
+    def update_parameters(self):  # 更新参数
         x, y = self.get_real_resolution().values()
         self.len_x, self.len_y = int(x * self.region[0]), int(y * self.region[1])
         self.top_x, self.top_y = int(x // 2 * (1. - self.region[0])), int(y // 2 * (1. - self.region[1]))
@@ -26,7 +26,7 @@ class Screen(object):
         high = g32.GetDeviceCaps(self.srcdc, 117)
         return {"wide": wide, "high": high}
 
-    def grab_screen_win32(self):
+    def grab_screen_win32(self):  # 抓屏
         g32.SelectObject(self.memdc, self.bmp)
         g32.BitBlt(self.memdc, 0, 0, self.len_x, self.len_y, self.srcdc, self.top_x, self.top_y, 13369376)
 

@@ -29,7 +29,8 @@ import os
 "检测帧率高于15，锁人出现明显抖动时，把lock-smooth上调"
 "你可以尝试同时开启lock_mode和recoil_mode，然后试着在靶场按住左键不松手^^（只支持ak47）"
 parser = argparse.ArgumentParser()
-parser.add_argument('--model-path', type=str, default='aim_csgo/models/1200.pt', help='模型地址，pytorch模型请以.pt结尾，onnx模型请以.onnx结尾，tensorrt模型请以.trt结尾')
+parser.add_argument('--model-path', type=str, default='aim_csgo/models/yolov5n_cf7000.pt',
+                    help='模型地址，pytorch模型请以.pt结尾，onnx模型请以.onnx结尾，tensorrt模型请以.trt结尾')
 parser.add_argument('--imgsz', type=list, default=640, help='和你训练模型时imgsz一样')
 parser.add_argument('--conf-thres', type=float, default=0.6, help='置信阈值')
 parser.add_argument('--iou-thres', type=float, default=0.05, help='交并比阈值')
@@ -37,27 +38,31 @@ parser.add_argument('--use-cuda', type=bool, default=True, help='是否使用cud
 parser.add_argument('--half', type=bool, default=True, help='是否使用半浮点运算')
 parser.add_argument('--sleep-time', type=int, default=5, help='检测帧率控制(ms)，防止因快速拉枪导致的残影误检')
 
-parser.add_argument('--show-window', type=bool, default=True, help='是否显示实时检测窗口(若为True，若想关闭窗口请结束程序！)')
+parser.add_argument('--show-window', type=bool, default=True,
+                    help='是否显示实时检测窗口(若为True，若想关闭窗口请结束程序！)')
 parser.add_argument('--top-most', type=bool, default=True, help='是否保持实时检测窗口置顶')
 parser.add_argument('--resize-window', type=float, default=1 / 3, help='缩放实时检测窗口大小')
 parser.add_argument('--thickness', type=int, default=3, help='画框粗细，必须大于1/resize-window')
 parser.add_argument('--show-fps', type=bool, default=True, help='是否显示帧率')
 parser.add_argument('--show-label', type=bool, default=True, help='是否显示标签')
 
-parser.add_argument('--region', type=tuple, default=(1, 1), help='检测范围；分别为横向和竖向，(1.0, 1.0)表示全屏检测，越低检测范围越小(始终保持屏幕中心为中心)')
+parser.add_argument('--region', type=tuple, default=(1, 1),
+                    help='检测范围；分别为横向和竖向，(1.0, 1.0)表示全屏检测，越低检测范围越小(始终保持屏幕中心为中心)')
 
 parser.add_argument('--hold-lock', type=bool, default=False, help='lock模式；True为按住，False为切换')
-parser.add_argument('--lock-sen', type=float, default=1, help='lock幅度系数；为游戏中(csgo)灵敏度')
-parser.add_argument('--lock-smooth', type=float, default=1, help='lock平滑系数；越大越平滑，最低1.0')
+parser.add_argument('--lock-sen', type=float, default=1.3, help='lock幅度系数；为游戏中(csgo)灵敏度')
+parser.add_argument('--lock-smooth', type=float, default=3, help='lock平滑系数；越大越平滑，最低1.0')
 parser.add_argument('--lock-button', type=str, default='x2', help='lock按键；只支持鼠标按键，不能是左键')
 parser.add_argument('--lock-sound', type=bool, default=True, help='切换到lock模式时是否发出提示音')
-parser.add_argument('--lock-strategy', type=str, default='', help='lock模式移动改善策略，为空时无策略，为pid时使用PID控制算法，暂未实现其他算法捏')
-parser.add_argument('--p-i-d', type=tuple, default=(1.1, 0.1, 0.1), help='PID控制算法p,i,d参数调整')
+parser.add_argument('--lock-strategy', type=str, default='pid',
+                    help='lock模式移动改善策略，为空时无策略，为pid时使用PID控制算法，暂未实现其他算法捏')
+parser.add_argument('--p-i-d', type=tuple, default=(1, 0.2, 0.02), help='PID控制算法p,i,d参数调整')
 parser.add_argument('--head-first', type=bool, default=True, help='是否优先瞄头')
-parser.add_argument('--lock-tag', type=list, default=[1, 0, 3, 2], help='对应标签；缺一不可，自己按以下顺序对应标签，ct_head ct_body t_head t_body')
-parser.add_argument('--lock-choice', type=list, default=[1, 3], help='目标选择；可自行决定锁定的目标，从自己的标签中选')
+parser.add_argument('--lock-tag', type=list, default=[1, 0], help='对应标签；缺一不可，自己按以下顺序对应标签，ct_head ct_body t_head '
+                                                                  't_body')
+parser.add_argument('--lock-choice', type=list, default=[1, 0], help='目标选择；可自行决定锁定的目标，从自己的标签中选')
 
-parser.add_argument('--recoil-sen', type=float, default=1, help='压枪幅度；自己调，调到合适')
+parser.add_argument('--recoil-sen', type=float, default=1.3, help='压枪幅度；自己调，调到合适')
 parser.add_argument('--recoil-button', type=str, default='x1', help='ak47压枪按键；只支持鼠标按键,用不到置为0')
 
 args = parser.parse_args()
@@ -172,7 +177,6 @@ while True:
     if len(det):
         det[:, :4] = scale_coords(img.shape[2:], det[:, :4], img0.shape).round()
         for *xyxy, conf, cls in reversed(det):
-            # bbox:(tag, x_center, y_center, x_width, y_width)
             xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
             line = (cls, *xywh)  # label format
             aim = ('%g ' * len(line)).rstrip() % line
