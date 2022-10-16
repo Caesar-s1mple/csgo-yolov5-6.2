@@ -1,9 +1,14 @@
 import torch
-from models.common import DetectMultiBackend
+from models.experimental import attempt_load
 
 
 def load_model(args):
-    device = torch.device('cuda:0') if args.use_cuda else torch.device('cpu')
-    model = DetectMultiBackend(args.model_path, device=device, dnn=False, fp16=args.half)
+    device = 'cuda' if args.use_cuda else 'cpu'
+    half = device != 'cpu'
+    model = attempt_load(args.model_path, device=device)  # load FP32 model
+    if half:
+        model.half()  # to FP16
+    if device != 'cpu':
+        model(torch.zeros(1, 3, args.imgsz, args.imgsz).to(device).type_as(next(model.parameters())))
 
     return model

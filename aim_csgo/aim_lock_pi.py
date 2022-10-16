@@ -2,6 +2,7 @@ import csv
 import time
 from math import *
 from ctypes import *
+import lib.ghub_utils as ghub
 
 u32 = windll.user32
 
@@ -51,7 +52,6 @@ class Locker(object):
         Iout_y = self.Ki * self.error_sum_y
         Dout_y = self.Kd * (error_y - self.pre_error_y)
         self.pre_error_y = error_y
-
         return int(Pout_x + Iout_x + Dout_x), int(Pout_y + Iout_y + Dout_y)
 
     def reset_params(self):
@@ -69,11 +69,12 @@ class Locker(object):
             dist_list = []
             tag_list = [x[0] for x in aims_copy]
             if self.head_first:
-                if self.lock_tag[0] in tag_list or self.lock_tag[2] in tag_list:  # 有头
-                    aims_copy = [x for x in aims_copy if x[0] in [self.lock_tag[0], self.lock_tag[2]]]
+                if self.lock_tag[0] in tag_list or self.lock_tag[1] in tag_list:  # 有头
+                    aims_copy = [x for x in aims_copy if x[0] in [self.lock_tag[0], self.lock_tag[1]]]
             for det in aims_copy:
                 _, x_c, y_c, _, _ = det
-                dist = (self.len_x * float(x_c) + self.top_x - mouse_pos_x) ** 2 + (self.len_y * float(y_c) + self.top_y - mouse_pos_y) ** 2
+                dist = (self.len_x * float(x_c) + self.top_x - mouse_pos_x) ** 2 + (
+                        self.len_y * float(y_c) + self.top_y - mouse_pos_y) ** 2
                 dist_list.append(dist)
 
             det = aims_copy[dist_list.index(min(dist_list))]
@@ -104,7 +105,6 @@ class Locker(object):
 
             if self.lock_strategy == 'pid':
                 rel_x, rel_y = self.__pid(rel_x, rel_y)
-            # u32.mouse_event(0x0001, int(-rel_x / self.lock_smooth), int(-rel_y / self.lock_smooth), 0, 0)
 
             recoil_x, recoil_y = 0., 0.
             if self.recoil_mode and self.left_pressed:
@@ -117,10 +117,12 @@ class Locker(object):
                         recoil_y += i[1]
                     else:
                         break
-            u32.mouse_event(0x0001,
-                            int(-rel_x / self.lock_smooth + recoil_x * self.recoil_k),
-                            int(-rel_y / self.lock_smooth - recoil_y * self.recoil_k), 0, 0)
+            x_pid = int(-rel_x / self.lock_smooth + recoil_x * self.recoil_k)
+            y_pid = int(-rel_y / self.lock_smooth - recoil_y * self.recoil_k)
+            ghub.mouse_xy(x_pid, y_pid)
+
             self.locked = True
+
         else:
             self.locked = False
 
@@ -135,57 +137,12 @@ class Locker(object):
                     recoil_x = i[0]
                     recoil_y = i[1]
                 else:
-                    u32.mouse_event(0x0001,
-                                    int(recoil_x * self.recoil_k),
-                                    int(-recoil_y * self.recoil_k), 0, 0)
+                    ghub.mouse_xy(
+                        int(recoil_x * self.recoil_k),
+                        int(-recoil_y * self.recoil_k))
                     break
 
     def __get_recoil_path(self):
-        # m4a1_recoil = []
-        # m4a4_recoil = []
-        # galil_recoil = []
-        # famas_recoil = []
-        # aug_recoil = []
-        # bizon_recoil = []
-        # cz75_recoil = []
-        # m249_recoil = []
-        # mac10_recoil = []
-        # mp5sd_recoil = []
-        # mp7_recoil = []
-        # mp9_recoil = []
-        # p90_recoil = []
-        # sg553_recoil = []
-        # ump45_recoil = []
 
         for i in csv.reader(open('./aim_csgo/ammo_path/ak47.csv', encoding='utf-8-sig')):
             self.ak47_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/m4a1.csv', encoding='utf-8-sig')):
-        #     m4a1_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/m4a4.csv', encoding='utf-8-sig')):
-        #     m4a4_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/galil.csv', encoding='utf-8-sig')):
-        #     galil_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/famas.csv', encoding='utf-8-sig')):
-        #     famas_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/aug.csv', encoding='utf-8-sig')):
-        #     aug_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/bizon.csv', encoding='utf-8-sig')):
-        #     bizon_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/cz75.csv', encoding='utf-8-sig')):
-        #     cz75_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/m249.csv', encoding='utf-8-sig')):
-        #     m249_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/mac10.csv', encoding='utf-8-sig')):
-        #     mac10_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/mp5sd.csv', encoding='utf-8-sig')):
-        #     mp5sd_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/mp7.csv', encoding='utf-8-sig')):
-        #     mp7_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/mp9.csv', encoding='utf-8-sig')):
-        #     mp9_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/p90.csv', encoding='utf-8-sig')):
-        #     p90_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/sg553.csv', encoding='utf-8-sig')):
-        #     sg553_recoil.append([float(x) for x in i])
-        # for i in csv.reader(open('./aim_csgo/ammo_path/ump45.csv', encoding='utf-8-sig')):
-        #     ump45_recoil.append([float(x) for x in i])
