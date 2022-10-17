@@ -1,5 +1,5 @@
-from aim_csgo.screen_inf import Screen
-from aim_csgo.cs_model import load_model
+from aim.screen_inf import Screen
+from aim.cs_model import load_model
 import cv2
 from widget import ui_mainFrom
 import sys
@@ -11,11 +11,11 @@ import numpy as np
 from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QMessageBox
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 from utils.general import non_max_suppression, scale_coords, xyxy2xywh
-from aim_csgo.screen_utils import grab_screen_mss, grab_screen_win32, get_parameters
+from aim.screen_utils import grab_screen_mss, grab_screen_win32, get_parameters
 from utils.augmentations import letterbox
-from aim_csgo.screen_inf import show_fps, show_top_most
-from aim_csgo.aim_lock_pi import Locker
-from aim_csgo.verify_args import verify_args
+from aim.screen_inf import show_fps, show_top_most
+from aim.aim_lock_pi import Locker
+from aim.verify_args import verify_args
 import winsound
 import warnings
 import argparse
@@ -26,11 +26,10 @@ import os
 "参数请认真修改，改好了效果就好"
 "游戏与桌面分辨率不一致时需要开启全屏模式，不能是无边框窗口"
 "此版本不支持在桌面试用，因为默认鼠标在屏幕中心"
-"默认参数在csgo中1280*960(4:3)分辨率下为一帧锁"
 "检测帧率高于15，锁人出现明显抖动时，把lock-smooth上调"
 "你可以尝试同时开启lock_mode和recoil_mode，然后试着在靶场按住左键不松手^^（只支持ak47）"
 parser = argparse.ArgumentParser()
-parser.add_argument('--model-path', type=str, default='aim_csgo/models/yolov5n_cf7000.pt',
+parser.add_argument('--model-path', type=str, default='aim/models/yolov5n_cf7000.pt',
                     help='模型地址，pytorch模型请以.pt结尾，onnx模型请以.onnx结尾，tensorrt模型请以.trt结尾')
 parser.add_argument('--imgsz', type=list, default=640, help='和你训练模型时imgsz一样')
 parser.add_argument('--conf-thres', type=float, default=0.6, help='置信阈值')
@@ -51,7 +50,7 @@ parser.add_argument('--region', type=list, default=[0.4, 0.7],
                     help='检测范围；分别为横向和竖向，(1.0, 1.0)表示全屏检测，越低检测范围越小(始终保持屏幕中心为中心)')
 parser.add_argument('--use_mss', type=str, default=True, help='是否使用mss截屏；为False時使用win32截屏')
 parser.add_argument('--hold-lock', type=bool, default=True, help='lock模式；True为按住，False为切换')
-parser.add_argument('--lock-sen', type=float, default=1, help='lock幅度系数；为游戏中(csgo)灵敏度')
+parser.add_argument('--lock-sen', type=float, default=1, help='lock幅度系数；为游戏灵敏度')
 parser.add_argument('--lock-smooth', type=float, default=3, help='lock平滑系数；越大越平滑，最低1.0')
 parser.add_argument('--lock-button', type=str, default='right', help='lock按键；只支持鼠标按键，不能是左键')
 parser.add_argument('--lock-strategy', type=str, default='pid',
