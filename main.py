@@ -1,9 +1,3 @@
-# THIS FILE IS PART OF Caesar PROJECT
-# main.py - The core part of the AI assistant
-#
-# THIS PROGRAM IS A FREE PROGRAM, WHICH IS LICENSED UNDER Caesar
-# DO NOT FORWARD THIS PROGRAM TO ANYONE
-
 from aim_csgo.screen_inf import Screen
 from aim_csgo.cs_model import load_model
 import cv2
@@ -28,7 +22,6 @@ import argparse
 import pid
 import time
 import os
-import json
 
 "参数请认真修改，改好了效果就好"
 "游戏与桌面分辨率不一致时需要开启全屏模式，不能是无边框窗口"

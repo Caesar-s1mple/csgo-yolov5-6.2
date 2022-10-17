@@ -30,14 +30,9 @@ class Locker(object):
         self.pre_error_x = 0
         self.pre_error_y = 0
         self.pre_time = time.time()
-
-        self.recoil_mode = False
         self.left_pressed = False
         self.shot_time = 0
         self.recoil_k = args.recoil_sen
-
-        self.ak47_recoil = []
-        self.__get_recoil_path()
 
     def __pid(self, error_x, error_y):
         # 离散形式PID
@@ -106,43 +101,8 @@ class Locker(object):
             if self.lock_strategy == 'pid':
                 rel_x, rel_y = self.__pid(rel_x, rel_y)
 
-            recoil_x, recoil_y = 0., 0.
-            if self.recoil_mode and self.left_pressed:
-                t = time.time()
-                sum_t = 0
-                for i in self.ak47_recoil:
-                    if t - self.shot_time > sum_t / 1000:
-                        sum_t += i[2]
-                        recoil_x += i[0]
-                        recoil_y += i[1]
-                    else:
-                        break
-            x_pid = int(-rel_x / self.lock_smooth + recoil_x * self.recoil_k)
-            y_pid = int(-rel_y / self.lock_smooth - recoil_y * self.recoil_k)
-            ghub.mouse_xy(x_pid, y_pid)
-
+            ghub.mouse_xy(rel_x, rel_y)  # 移动鼠标
             self.locked = True
 
         else:
             self.locked = False
-
-    def recoil_only(self):
-        if self.recoil_mode and self.left_pressed:
-            recoil_x, recoil_y = 0., 0.
-            t = time.time()
-            sum_t = 0
-            for i in self.ak47_recoil:
-                if t - self.shot_time > sum_t / 1000:
-                    sum_t += i[2]
-                    recoil_x = i[0]
-                    recoil_y = i[1]
-                else:
-                    ghub.mouse_xy(
-                        int(recoil_x * self.recoil_k),
-                        int(-recoil_y * self.recoil_k))
-                    break
-
-    def __get_recoil_path(self):
-
-        for i in csv.reader(open('./aim_csgo/ammo_path/ak47.csv', encoding='utf-8-sig')):
-            self.ak47_recoil.append([float(x) for x in i])
