@@ -2,7 +2,7 @@
 
 **此版本目前以测试为主，希望没bug，关于此版本代码上的问题可随时在群里@我**
 
-**另外还有个版本见extra分支，由[chiaki-1999](https://github.com/chiaki-1999)修改贡献**
+**另外还有个版本见[extra](https://github.com/Caesar-s1mple/csgo-yolov5-6.2/tree/extra)分支，由[chiaki-1999](https://github.com/chiaki-1999)修改贡献**
 
 ****-----update-----****		- 2022.10.11
 
