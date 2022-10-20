@@ -2,7 +2,7 @@ import torch
 
 
 def verify_args(args):
-    if args.use_cuda and torch.cuda.is_available() == False:
+    if args.use_cuda and not torch.cuda.is_available():
         print("--use-cuda 无GPU环境，请改为False")
         exit(0)
 
@@ -22,17 +22,5 @@ def verify_args(args):
         if i not in args.lock_tag:
             print("--lock-choice 请注意参数要求！")
             exit(0)
-
-
-
-    buttons = []
-    buttons.append(args.lock_button)
-    if args.recoil_button not in ['left', 'middle', 'right', 'x1', 'x2']:
-        print("--recoil-button-ak47 只支持鼠标按键:left, middle, right, x1, x2")
-        exit(0)
-    if args.recoil_button in buttons:
-        print("--recoil-button-ak47 与其他按键冲突")
-        exit(0)
-    buttons.append(args.recoil_button)
 
 
