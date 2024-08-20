@@ -1,6 +1,6 @@
 # CSGO-YOLOv5
 
-**此版本目前以测试为主，希望没bug，关于此版本代码上的问题可随时在群里@我**
+**本项目完全开源！！是个人利用学业空闲时间所构建，未曾涉及任何盈利。此版本目前以测试为主，希望没bug:)**
 
 **另外还有个版本见[extra](https://github.com/Caesar-s1mple/csgo-yolov5-6.2/tree/extra)分支，由[chiaki-1999](https://github.com/chiaki-1999)修改贡献**
 
@@ -30,10 +30,6 @@
 
 ## 联系方式
 
-- QQ群1：[951024954](https://qm.qq.com/cgi-bin/qm/qr?k=dqypucNxsZ1jis_vsrh2aU3lg2WqDWE1&jump_from=webapi&authKey=a1IQ5sa7W6lYfKdxhRKFD7lAG9EGDprrfgOboJgg1ewDPtVEE2yAg5AG/OSb52GK)
-
-- QQ群2：[967082372](https://qm.qq.com/cgi-bin/qm/qr?k=VwAu35sm2MtIquEWB7ajkE_6fu5vtMTh&jump_from=webapi&authKey=jXIi1Vctpiaxmok4Yn2TAoQu8zW74rDykw9tgkJ7o2PMtXS4EU+utXgypbSggAOp)（推荐加入）
-
 - B站ID：[Caesar丶L](https://space.bilibili.com/14796576)
 
 - GitHub：[Caesar-s1mple](https://github.com/Caesar-s1mple)
@@ -42,6 +38,4 @@
 
 ### 最后！
 
-**某些人不要拿着我的代码套层皮就圈钱，我都没拿这个赚钱你凭什么(╯‵□′)╯︵┻━┻**
-
-（当然你也可以支持我~[Caesar的爱发电](https://afdian.net/a/caesar_L)）
+**某些人不要拿着我的代码套层皮就圈钱，这个是以技术分享为主的完全开源项目。**
